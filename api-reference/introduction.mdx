@@ -10,14 +10,6 @@ keywords: ['api reference', 'endpoints', 'rest api', 'token exchange', 'actions'
 
 The Flowent API Gateway provides a REST API for registering and managing custom actions. All endpoints require JWT authentication obtained by exchanging your API token.
 
-<Card
-  title="OpenAPI Specification"
-  icon="code"
-  href="https://github.com/janan-tech/flowent"
->
-  View the complete OpenAPI specification
-</Card>
-
 ## Authentication
 
 All API endpoints are authenticated using Bearer tokens:
@@ -47,4 +39,4 @@ curl -X POST https://your-flowent-instance.com/api/v1/gateway/token/exchange \
 - **PUT** `/api/v1/gateway/actions/{action_name}` - Update an action
 - **DELETE** `/api/v1/gateway/actions/{action_name}` - Delete an action
 
-For detailed information, see the [API Concepts](/api_gateway/README) documentation.
+For detailed information, see the [API Concepts](/api-concepts) documentation.

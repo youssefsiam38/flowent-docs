@@ -25,7 +25,7 @@ Create a simple webhook server to receive requests from Flowent. Here are the re
 - **Return responses** in the expected format: `{ "result": "...", "error": "" }`
 - **Handle test validation** requests during action registration
 
-See the [Code Examples](/api_gateway/examples/python/README) for complete implementations.
+Refer to the [API Concepts](/api-concepts) guide for detailed implementation patterns.
 
 </Step>
 
@@ -164,7 +164,7 @@ ngrok http 8000
     2. Verify you're using the correct HMAC key from the admin panel
     3. Check that your JSON serialization matches Flowent's format
     4. Use logging to compare your calculated vs received signature
-    5. See the [Signature Validation](/api_gateway/README#signature-validation) guide for detailed examples
+    5. See the [Signature Validation](/api-concepts#signature-validation) guide for detailed examples
   </Accordion>
 
   <Accordion title="JWT token expired">
@@ -174,6 +174,5 @@ ngrok http 8000
 
 ## Next Steps
 
-- Review the [API Concepts](/api_gateway/README) for detailed technical information
-- Check out [Code Examples](/api_gateway/examples/python/README) for complete implementations
+- Review the [API Concepts](/api-concepts) for detailed technical information
 - Explore the [API Reference](/api-reference/introduction) for all available endpoints
