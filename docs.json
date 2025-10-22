@@ -16,28 +16,16 @@
         "icon": "rocket",
         "expanded": true,
         "pages": [
-          {
-            "page": "index",
-            "icon": "home"
-          },
-          {
-            "page": "quickstart",
-            "icon": "zap"
-          },
-          {
-            "page": "development",
-            "icon": "wrench"
-          }
+          "index",
+          "quickstart",
+          "development"
         ]
       },
       {
         "group": "Guides",
         "icon": "book-open",
         "pages": [
-          {
-            "page": "api-concepts",
-            "icon": "lightbulb"
-          },
+          "api-concepts",
           "api_gateway/MIGRATION"
         ]
       },
@@ -45,10 +33,7 @@
         "group": "API Reference",
         "icon": "square-terminal",
         "pages": [
-          {
-            "page": "api-reference/introduction",
-            "icon": "book"
-          }
+          "api-reference/introduction"
         ]
       },
       {
@@ -68,9 +53,9 @@
   "navbar": {
     "links": [
       {
-        "label": "GitHub",
-        "href": "https://github.com/janan-tech/flowent",
-        "icon": "github"
+        "label": "Flowent",
+        "href": "https://flowent.chat",
+        "icon": "arrow-up-right"
       }
     ]
   },
@@ -102,24 +87,17 @@
    ]
   },
   "footer": {
-    "socials": {
-      "github": "https://github.com/janan-tech/flowent"
-    },
     "links": [
       {
-        "header": "Resources",
+        "header": "Product",
         "items": [
           {
-            "label": "API Specification",
-            "href": "/api-reference/introduction"
+            "label": "Flowent Website",
+            "href": "https://flowent.chat"
           },
           {
-            "label": "Code Examples",
-            "href": "/api_gateway/examples/python/README"
-          },
-          {
-            "label": "GitHub Repository",
-            "href": "https://github.com/janan-tech/flowent"
+            "label": "Pricing",
+            "href": "https://flowent.chat/pricing"
           }
         ]
       },
@@ -127,12 +105,12 @@
         "header": "Support",
         "items": [
           {
-            "label": "GitHub Issues",
-            "href": "https://github.com/janan-tech/flowent/issues"
+            "label": "Contact Support",
+            "href": "https://flowent.chat/contact"
           },
           {
-            "label": "Contact",
-            "href": "https://flowent.chat/contact"
+            "label": "API Gateway Docs",
+            "href": "https://docs.flowent.chat"
           }
         ]
       }
