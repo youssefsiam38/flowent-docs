@@ -4,9 +4,9 @@
   "name": "Flowent API Gateway",
   "description": "Documentation for the Flowent API Gateway",
   "colors": {
-    "primary": "#0066CC",
-    "light": "#0088FF",
-    "dark": "#0052A3"
+    "primary": "#4DCFE0",
+    "light": "#8DE5F0",
+    "dark": "#2BA8C5"
   },
   "favicon": "/favicon.svg",
   "navigation": {
