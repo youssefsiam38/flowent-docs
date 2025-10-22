@@ -10,60 +10,56 @@
   },
   "favicon": "/favicon.svg",
   "navigation": {
-    "tabs": [
+    "groups": [
       {
-        "tab": "Documentation",
-        "groups": [
+        "group": "Getting Started",
+        "icon": "rocket",
+        "expanded": true,
+        "pages": [
           {
-            "group": "Getting started",
-            "pages": [
-              "index",
-              "quickstart",
-              "development"
-            ]
+            "page": "index",
+            "icon": "home"
           },
           {
-            "group": "Concepts",
-            "pages": [
-              "api-concepts"
-            ]
+            "page": "quickstart",
+            "icon": "zap"
           },
           {
-            "group": "Integration",
-            "pages": [
-              "api_gateway/MIGRATION"
-            ]
-          },
-          {
-            "group": "Examples",
-            "pages": [
-              "api_gateway/examples/README",
-              "api_gateway/examples/python/README"
-            ]
+            "page": "development",
+            "icon": "wrench"
           }
         ]
       },
       {
-        "tab": "API Reference",
-        "groups": [
+        "group": "Guides",
+        "icon": "book-open",
+        "pages": [
           {
-            "group": "API Specification",
-            "pages": [
-              "api-reference/introduction"
-            ]
+            "page": "api-concepts",
+            "icon": "lightbulb"
+          },
+          "api_gateway/MIGRATION"
+        ]
+      },
+      {
+        "group": "API Reference",
+        "icon": "square-terminal",
+        "pages": [
+          {
+            "page": "api-reference/introduction",
+            "icon": "book"
           }
         ]
+      },
+      {
+        "group": "Examples",
+        "icon": "code",
+        "pages": [
+          "api_gateway/examples/README",
+          "api_gateway/examples/python/README"
+        ]
       }
-    ],
-    "global": {
-      "anchors": [
-        {
-          "anchor": "GitHub",
-          "href": "https://github.com/janan-tech/flowent",
-          "icon": "github"
-        }
-      ]
-    }
+    ]
   },
   "logo": {
     "light": "/logo/light.svg",
@@ -73,9 +69,25 @@
     "links": [
       {
         "label": "GitHub",
-        "href": "https://github.com/janan-tech/flowent"
+        "href": "https://github.com/janan-tech/flowent",
+        "icon": "github"
       }
     ]
+  },
+  "api": {
+    "playground": {
+      "display": "interactive"
+    },
+    "examples": {
+      "languages": ["curl", "python", "javascript"],
+      "prefill": true
+    }
+  },
+  "search": {
+    "prompt": "Search documentation..."
+  },
+  "seo": {
+    "indexing": "navigable"
   },
   "contextual": {
     "options": [
@@ -92,6 +104,38 @@
   "footer": {
     "socials": {
       "github": "https://github.com/janan-tech/flowent"
-    }
+    },
+    "links": [
+      {
+        "header": "Resources",
+        "items": [
+          {
+            "label": "API Specification",
+            "href": "/api-reference/introduction"
+          },
+          {
+            "label": "Code Examples",
+            "href": "/api_gateway/examples/python/README"
+          },
+          {
+            "label": "GitHub Repository",
+            "href": "https://github.com/janan-tech/flowent"
+          }
+        ]
+      },
+      {
+        "header": "Support",
+        "items": [
+          {
+            "label": "GitHub Issues",
+            "href": "https://github.com/janan-tech/flowent/issues"
+          },
+          {
+            "label": "Contact",
+            "href": "https://flowent.chat/contact"
+          }
+        ]
+      }
+    ]
   }
 }

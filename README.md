@@ -37,7 +37,6 @@ flowent-docs/
 ├── development.mdx             # Development setup
 ├── api_gateway/                # API Gateway documentation
 │   ├── README.md              # Detailed API concepts
-│   ├── MIGRATION.md           # Integration guide
 │   ├── openapi.yaml           # OpenAPI specification
 │   └── examples/              # Code examples
 │       └── python/

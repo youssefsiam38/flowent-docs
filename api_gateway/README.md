@@ -1,11 +1,3 @@
----
-title: "API Concepts"
-sidebarTitle: "Concepts"
-icon: "lightbulb"
-description: "Master Flowent API Gateway concepts including JWT authentication, webhook implementation, HMAC signature validation, security best practices, and error handling."
-keywords: ['api concepts', 'authentication', 'jwt', 'webhooks', 'hmac', 'security', 'signature validation', 'action management']
----
-
 # Flowent API Gateway Documentation
 
 ## Overview
@@ -66,7 +58,7 @@ Response:
 ```json
 {
   "jwt_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "token_type": "Bearer",
+  "token_type": "Bearer", 
   "expires_in": 86400
 }
 ```
@@ -100,7 +92,7 @@ curl -X POST https://your-flowent-instance.com/api/v1/gateway/actions \
           "description": "Email address of the recipient"
         },
         "subject": {
-          "type": "string",
+          "type": "string", 
           "description": "Email subject line"
         },
         "body": {
@@ -194,34 +186,34 @@ def validate_signature(request_data, received_signature, hmac_key):
     # Create a copy of the request data WITHOUT the signature field
     payload_without_signature = {
         "action_name": request_data["action_name"],
-        "parameters": request_data["parameters"],
+        "parameters": request_data["parameters"], 
         "timestamp": request_data["timestamp"]
     }
-
+    
     # Include test field if present (for validation requests)
     if "test" in request_data:
         payload_without_signature["test"] = request_data["test"]
-
+    
     # Serialize the payload without signature (must match Flowent's serialization)
     payload = json.dumps(payload_without_signature, separators=(',', ':'))
-
+    
     # Calculate HMAC on payload without signature
     expected_signature = hmac.new(
         hmac_key.encode('utf-8'),
         payload.encode('utf-8'),
         hashlib.sha256
     ).hexdigest()
-
+    
     return hmac.compare_digest(received_signature, expected_signature)
 
 # Example usage in your webhook handler
 def handle_webhook(request):
     request_data = json.loads(request.body)
     received_signature = request_data.get("signature", "")
-
+    
     if not validate_signature(request_data, received_signature, your_hmac_key):
         return {"error": "Invalid signature"}, 401
-
+    
     # Process the valid request...
 ```
 
@@ -242,23 +234,23 @@ func validateSignature(requestData map[string]interface{}, receivedSignature str
         "parameters":  requestData["parameters"],
         "timestamp":   requestData["timestamp"],
     }
-
+    
     // Include test field if present
     if test, exists := requestData["test"]; exists {
         payloadWithoutSig["test"] = test
     }
-
+    
     // Marshal without signature field
     payload, err := json.Marshal(payloadWithoutSig)
     if err != nil {
         return false
     }
-
+    
     // Calculate HMAC
     mac := hmac.New(sha256.New, hmacKey)
     mac.Write(payload)
     expectedSignature := hex.EncodeToString(mac.Sum(nil))
-
+    
     return hmac.Equal([]byte(receivedSignature), []byte(expectedSignature))
 }
 ```
@@ -382,15 +374,15 @@ def debug_signature_validation(request_data, received_signature, hmac_key):
     }
     if "test" in request_data:
         payload_without_signature["test"] = request_data["test"]
-
+    
     payload = json.dumps(payload_without_signature, separators=(',', ':'))
     expected_signature = hmac.new(hmac_key.encode(), payload.encode(), hashlib.sha256).hexdigest()
-
+    
     logging.info(f"Payload without signature: {payload}")
     logging.info(f"Expected signature: {expected_signature}")
     logging.info(f"Received signature: {received_signature}")
     logging.info(f"Signatures match: {hmac.compare_digest(expected_signature, received_signature)}")
-
+    
     return hmac.compare_digest(expected_signature, received_signature)
 ```
 
@@ -400,3 +392,12 @@ For additional support:
 - Check the admin panel logs
 - Review your webhook server logs
 - Contact the Flowent team with specific error messages
+
+## Changelog
+
+### Version 1.0
+- Initial API Gateway release
+- JWT authentication
+- HMAC signature validation
+- Action CRUD operations
+- Admin panel integration
