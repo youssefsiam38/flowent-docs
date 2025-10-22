@@ -1,94 +1,172 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "OpenAPI Plant Store",
-    "description": "A sample API that uses a plant store as an example to demonstrate features in the OpenAPI specification",
-    "license": {
-      "name": "MIT"
-    },
-    "version": "1.0.0"
+    "title": "Flowent API Gateway",
+    "description": "The Flowent API Gateway enables external developers to register and manage custom actions that can be used within Flowent's conversational flows. This API provides secure, tenant-specific extensibility for the Flowent platform.\n\n## Authentication\n\n1. Obtain an API token from the Flowent admin panel\n2. Exchange the API token for a JWT token using the `/token/exchange` endpoint\n3. Use the JWT token as a Bearer token in the Authorization header for all requests\n\n## Security\n\nAll webhook calls are secured with HMAC-SHA256 signatures using tenant-specific keys.",
+    "version": "1.0.0",
+    "contact": {
+      "name": "Flowent API Support",
+      "url": "https://flowent.chat/support",
+      "email": "contact@flowent.chat"
+    }
   },
   "servers": [
     {
-      "url": "http://sandbox.mintlify.com"
-    }
-  ],
-  "security": [
+      "url": "https://api.flowent.chat/api/v1/gateway",
+      "description": "Production server"
+    },
     {
-      "bearerAuth": []
+      "url": "https://staging-api.flowent.chat/api/v1/gateway",
+      "description": "Staging server"
+    },
+    {
+      "url": "http://localhost:8080/api/v1/gateway",
+      "description": "Local development server"
     }
   ],
   "paths": {
-    "/plants": {
-      "get": {
-        "description": "Returns all plants from the system that the user has access to",
-        "parameters": [
-          {
-            "name": "limit",
-            "in": "query",
-            "description": "The maximum number of results to return",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
+    "/token/exchange": {
+      "post": {
+        "summary": "Exchange API token for JWT token",
+        "description": "Exchange your API token for a JWT token that can be used for authenticated requests. JWT tokens are valid for 24 hours.",
+        "operationId": "exchangeToken",
+        "tags": ["Authentication"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["api_token"],
+                "properties": {
+                  "api_token": {
+                    "type": "string",
+                    "description": "Your API token from the admin panel",
+                    "example": "api_1234567890abcdef1234567890abcdef12345678"
+                  }
+                }
+              }
             }
           }
-        ],
+        },
         "responses": {
           "200": {
-            "description": "Plant response",
+            "description": "Token exchange successful",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Plant"
+                  "type": "object",
+                  "properties": {
+                    "jwt_token": {
+                      "type": "string",
+                      "description": "JWT token for authentication",
+                      "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                    },
+                    "token_type": {
+                      "type": "string",
+                      "enum": ["Bearer"],
+                      "example": "Bearer"
+                    },
+                    "expires_in": {
+                      "type": "integer",
+                      "description": "Token expiration time in seconds",
+                      "example": 86400
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          }
+        }
+      }
+    },
+    "/actions": {
+      "get": {
+        "summary": "List all actions",
+        "description": "Retrieve all actions registered for your tenant",
+        "operationId": "listActions",
+        "tags": ["Actions"],
+        "security": [{"BearerAuth": []}],
+        "responses": {
+          "200": {
+            "description": "List of actions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "actions": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Action"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      },
+      "post": {
+        "summary": "Register a new action",
+        "description": "Register a new action with Flowent. The action's webhook URL will be validated with a test request during registration.",
+        "operationId": "createAction",
+        "tags": ["Actions"],
+        "security": [{"BearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActionCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Action created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "action": {
+                      "$ref": "#/components/schemas/Action"
+                    }
                   }
                 }
               }
             }
           },
           "400": {
-            "description": "Unexpected error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "description": "Creates a new plant in the store",
-        "requestBody": {
-          "description": "Plant to add to the store",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/NewPlant"
-              }
-            }
+            "$ref": "#/components/responses/BadRequestError"
           },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "plant response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Plant"
-                }
-              }
-            }
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
           },
-          "400": {
-            "description": "unexpected error",
+          "409": {
+            "description": "Action name already exists",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "action with name 'send_email' already exists"
+                    }
+                  }
                 }
               }
             }
@@ -96,122 +174,430 @@
         }
       }
     },
-    "/plants/{id}": {
-      "delete": {
-        "description": "Deletes a single plant based on the ID supplied",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "description": "ID of plant to delete",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
+    "/actions/{name}": {
+      "parameters": [
+        {
+          "name": "name",
+          "in": "path",
+          "required": true,
+          "description": "Action name",
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9_]+$",
+            "example": "send_email"
           }
-        ],
+        }
+      ],
+      "get": {
+        "summary": "Get a specific action",
+        "description": "Retrieve details of a specific action by name",
+        "operationId": "getAction",
+        "tags": ["Actions"],
+        "security": [{"BearerAuth": []}],
         "responses": {
-          "204": {
-            "description": "Plant deleted",
-            "content": {}
-          },
-          "400": {
-            "description": "unexpected error",
+          "200": {
+            "description": "Action details",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "type": "object",
+                  "properties": {
+                    "action": {
+                      "$ref": "#/components/schemas/Action"
+                    }
+                  }
                 }
               }
             }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
           }
         }
-      }
-    }
-  },
-  "webhooks": {
-    "/plant/webhook": {
-      "post": {
-        "description": "Information about a new plant added to the store",
+      },
+      "put": {
+        "summary": "Update an action",
+        "description": "Update an existing action's properties",
+        "operationId": "updateAction",
+        "tags": ["Actions"],
+        "security": [{"BearerAuth": []}],
         "requestBody": {
-          "description": "Plant added to the store",
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/NewPlant"
+                "$ref": "#/components/schemas/ActionUpdateRequest"
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "Return a 200 status to indicate that the data was received successfully"
+            "description": "Action updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "action": {
+                      "$ref": "#/components/schemas/Action"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete an action",
+        "description": "Delete an action from your tenant",
+        "operationId": "deleteAction",
+        "tags": ["Actions"],
+        "security": [{"BearerAuth": []}],
+        "responses": {
+          "200": {
+            "description": "Action deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Action deleted successfully"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
           }
         }
       }
     }
   },
   "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT token obtained from token exchange"
+      }
+    },
     "schemas": {
-      "Plant": {
-        "required": [
-          "name"
-        ],
+      "Action": {
         "type": "object",
         "properties": {
-          "name": {
-            "description": "The name of the plant",
-            "type": "string"
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Unique action identifier",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
           },
-          "tag": {
-            "description": "Tag to specify the type",
-            "type": "string"
+          "tenant_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Tenant identifier",
+            "example": "123e4567-e89b-12d3-a456-426614174001"
+          },
+          "name": {
+            "type": "string",
+            "pattern": "^[a-z0-9_]+$",
+            "description": "Action name (lowercase, underscores, no spaces)",
+            "example": "send_email"
+          },
+          "description": {
+            "type": "string",
+            "description": "Human-readable description of the action",
+            "example": "Send an email to a specified recipient"
+          },
+          "json_schema": {
+            "type": "object",
+            "description": "JSON Schema defining the action's parameters",
+            "example": {
+              "type": "object",
+              "properties": {
+                "recipient": {
+                  "type": "string",
+                  "description": "Email address of the recipient"
+                },
+                "subject": {
+                  "type": "string",
+                  "description": "Email subject line"
+                },
+                "body": {
+                  "type": "string",
+                  "description": "Email body content"
+                }
+              },
+              "required": ["recipient", "subject", "body"]
+            }
+          },
+          "webhook_url": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL where the action will be executed",
+            "example": "https://your-server.com/actions/send_email"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the action was created",
+            "example": "2023-01-01T12:00:00Z"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the action was last updated",
+            "example": "2023-01-01T12:00:00Z"
           }
         }
       },
-      "NewPlant": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/Plant"
+      "ActionCreateRequest": {
+        "type": "object",
+        "required": ["name", "description", "webhook_url", "json_schema"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-z0-9_]+$",
+            "minLength": 1,
+            "maxLength": 100,
+            "description": "Action name (lowercase, underscores, no spaces)",
+            "example": "send_email"
           },
-          {
-            "required": [
-              "id"
-            ],
+          "description": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500,
+            "description": "Human-readable description of the action",
+            "example": "Send an email to a specified recipient"
+          },
+          "webhook_url": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL where the action will be executed (must be HTTPS in production)",
+            "example": "https://your-server.com/actions/send_email"
+          },
+          "json_schema": {
             "type": "object",
-            "properties": {
-              "id": {
-                "description": "Identification number of the plant",
-                "type": "integer",
-                "format": "int64"
-              }
+            "description": "JSON Schema defining the action's parameters",
+            "example": {
+              "type": "object",
+              "properties": {
+                "recipient": {
+                  "type": "string",
+                  "description": "Email address of the recipient"
+                },
+                "subject": {
+                  "type": "string",
+                  "description": "Email subject line"
+                },
+                "body": {
+                  "type": "string",
+                  "description": "Email body content"
+                }
+              },
+              "required": ["recipient", "subject", "body"]
             }
           }
-        ]
+        }
       },
-      "Error": {
-        "required": [
-          "error",
-          "message"
-        ],
+      "ActionUpdateRequest": {
         "type": "object",
         "properties": {
-          "error": {
-            "type": "integer",
-            "format": "int32"
+          "description": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500,
+            "description": "Human-readable description of the action",
+            "example": "Updated: Send an email to a specified recipient"
           },
-          "message": {
-            "type": "string"
+          "webhook_url": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL where the action will be executed",
+            "example": "https://your-server.com/v2/actions/send_email"
+          },
+          "json_schema": {
+            "type": "object",
+            "description": "JSON Schema defining the action's parameters",
+            "example": {
+              "type": "object",
+              "properties": {
+                "recipient": {
+                  "type": "string",
+                  "description": "Email address of the recipient"
+                },
+                "subject": {
+                  "type": "string",
+                  "description": "Email subject line"
+                },
+                "body": {
+                  "type": "string",
+                  "description": "Email body content"
+                },
+                "priority": {
+                  "type": "string",
+                  "enum": ["low", "normal", "high"],
+                  "description": "Email priority level"
+                }
+              },
+              "required": ["recipient", "subject", "body"]
+            }
+          }
+        }
+      },
+      "WebhookRequest": {
+        "type": "object",
+        "description": "Request sent to your webhook when an action is executed",
+        "properties": {
+          "action_name": {
+            "type": "string",
+            "description": "Name of the action being executed",
+            "example": "send_email"
+          },
+          "parameters": {
+            "type": "object",
+            "description": "Parameters for the action execution",
+            "example": {
+              "recipient": "user@example.com",
+              "subject": "Welcome!",
+              "body": "Welcome to our service!"
+            }
+          },
+          "timestamp": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Unix timestamp when the request was sent",
+            "example": 1645123456
+          },
+          "signature": {
+            "type": "string",
+            "description": "HMAC-SHA256 signature for request validation",
+            "example": "a8f4c2e9b1d7c3a5f2e8d6b4c1a9e7f3d5b8a2c6e4f1d9b7a3c5e8f2d6b4a1c9"
+          },
+          "test": {
+            "type": "boolean",
+            "description": "True if this is a test/validation request",
+            "example": false
+          }
+        }
+      },
+      "WebhookResponse": {
+        "type": "object",
+        "required": ["result"],
+        "properties": {
+          "result": {
+            "type": "string",
+            "description": "Description of the action result",
+            "example": "Email sent successfully to user@example.com"
+          },
+          "error": {
+            "type": "string",
+            "description": "Error message if the action failed (empty string if successful)",
+            "example": ""
           }
         }
       }
     },
-    "securitySchemes": {
-      "bearerAuth": {
-        "type": "http",
-        "scheme": "bearer"
+    "responses": {
+      "BadRequestError": {
+        "description": "Bad request",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "error": {
+                  "type": "string",
+                  "example": "Invalid request format"
+                },
+                "details": {
+                  "type": "string",
+                  "example": "Field 'name' is required"
+                }
+              }
+            }
+          }
+        }
+      },
+      "UnauthorizedError": {
+        "description": "Unauthorized",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "error": {
+                  "type": "string",
+                  "example": "Invalid token"
+                }
+              }
+            }
+          }
+        }
+      },
+      "NotFoundError": {
+        "description": "Resource not found",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "error": {
+                  "type": "string",
+                  "example": "Action not found"
+                }
+              }
+            }
+          }
+        }
+      },
+      "InternalServerError": {
+        "description": "Internal server error",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "error": {
+                  "type": "string",
+                  "example": "Internal server error"
+                }
+              }
+            }
+          }
+        }
       }
     }
-  }
+  },
+  "tags": [
+    {
+      "name": "Authentication",
+      "description": "Token exchange and authentication operations"
+    },
+    {
+      "name": "Actions",
+      "description": "Action registration and management operations"
+    }
+  ]
 }

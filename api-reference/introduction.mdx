@@ -1,33 +1,47 @@
 ---
-title: 'Introduction'
-description: 'Example section for showcasing API endpoints'
+title: 'API Reference'
+description: 'Flowent API Gateway endpoints and operations'
 ---
 
-<Note>
-  If you're not looking to build API reference documentation, you can delete
-  this section by removing the api-reference folder.
-</Note>
+## Flowent API Gateway Specification
 
-## Welcome
-
-There are two ways to build API documentation: [OpenAPI](https://mintlify.com/docs/api-playground/openapi/setup) and [MDX components](https://mintlify.com/docs/api-playground/mdx/configuration). For the starter kit, we are using the following OpenAPI specification.
+The Flowent API Gateway provides a REST API for registering and managing custom actions. All endpoints require JWT authentication obtained by exchanging your API token.
 
 <Card
-  title="Plant Store Endpoints"
-  icon="leaf"
-  href="https://github.com/mintlify/starter/blob/main/api-reference/openapi.json"
+  title="OpenAPI Specification"
+  icon="code"
+  href="https://github.com/janan-tech/flowent"
 >
-  View the OpenAPI specification file
+  View the complete OpenAPI specification
 </Card>
 
 ## Authentication
 
-All API endpoints are authenticated using Bearer tokens and picked up from the specification file.
+All API endpoints are authenticated using Bearer tokens:
 
-```json
-"security": [
-  {
-    "bearerAuth": []
-  }
-]
+```bash
+curl -X GET https://your-flowent-instance.com/api/v1/gateway/actions \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
+
+To obtain a JWT token, exchange your API token first:
+
+```bash
+curl -X POST https://your-flowent-instance.com/api/v1/gateway/token/exchange \
+  -H "Content-Type: application/json" \
+  -d '{"api_token": "your-api-token"}'
+```
+
+## Endpoints
+
+### Authentication
+- **POST** `/api/v1/gateway/token/exchange` - Exchange API token for JWT
+
+### Actions
+- **GET** `/api/v1/gateway/actions` - List all actions
+- **POST** `/api/v1/gateway/actions` - Register a new action
+- **GET** `/api/v1/gateway/actions/{action_name}` - Get action details
+- **PUT** `/api/v1/gateway/actions/{action_name}` - Update an action
+- **DELETE** `/api/v1/gateway/actions/{action_name}` - Delete an action
+
+For detailed information, see the [API Concepts](/api_gateway/README) documentation.

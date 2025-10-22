@@ -1,97 +1,91 @@
 ---
-title: "Introduction"
-description: "Welcome to the new home for your documentation"
+title: "Welcome to Flowent API Gateway"
+description: "Extend Flowent with custom actions using the API Gateway"
 ---
 
-## Setting up
+## What is Flowent API Gateway?
 
-Get your documentation site up and running in minutes.
+The Flowent API Gateway enables developers to register and manage custom actions that can be integrated into Flowent's conversational flows. Build extensible, tenant-specific functionality while maintaining security and reliability.
 
 <Card
-  title="Start here"
+  title="Get started in minutes"
   icon="rocket"
   href="/quickstart"
   horizontal
 >
-  Follow our three step quickstart guide.
+  Follow our quickstart guide to register your first action.
 </Card>
 
-## Make it yours
-
-Design a docs site that looks great and empowers your users.
+## Core Features
 
 <Columns cols={2}>
   <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
+    title="Action Registration"
+    icon="list-check"
   >
-    Edit your docs locally and preview them in real time.
+    Register custom webhook-based actions with JSON schemas.
   </Card>
   <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
+    title="Secure Authentication"
+    icon="shield"
   >
-    Customize the design and colors of your site to match your brand.
-  </Card>
-    <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
+    JWT-based API authentication with API tokens.
   </Card>
   <Card
-    title="API documentation"
+    title="HMAC Validation"
+    icon="lock"
+  >
+    Cryptographic signature validation for all webhooks.
+  </Card>
+  <Card
+    title="Full CRUD Operations"
+    icon="arrows-turn-right"
+  >
+    Create, read, update, and delete actions via REST API.
+  </Card>
+</Columns>
+
+## Quick Links
+
+<Columns cols={2}>
+  <Card
+    title="API Concepts"
+    icon="lightbulb"
+    href="/api_gateway/README"
+  >
+    Learn about authentication, webhooks, and security.
+  </Card>
+  <Card
+    title="API Reference"
     icon="terminal"
     href="/api-reference/introduction"
   >
-    Auto-generate API documentation from OpenAPI specifications.
+    Explore the complete API specification.
   </Card>
-</Columns>
-
-## Create beautiful pages
-
-Everything you need to create world-class documentation.
-
-<Columns cols={2}>
   <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
+    title="Integration Guide"
+    icon="code-merge"
+    href="/api_gateway/MIGRATION"
   >
-    Use MDX to style your docs pages.
+    Migrate and integrate with existing systems.
   </Card>
   <Card
-    title="Code samples"
+    title="Code Examples"
     icon="code"
-    href="/essentials/code"
+    href="/api_gateway/examples/python/README"
   >
-    Add sample code to demonstrate how to use your product.
-  </Card>
-  <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
-  >
-    Display images and other media.
-  </Card>
-  <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
-  >
-    Write once and reuse across your docs.
+    View implementation examples in Python.
   </Card>
 </Columns>
 
-## Need inspiration?
+## For Developers
+
+Ready to build? Start with our development setup guide to get your local environment running and begin registering your first action.
 
 <Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
+  title="Set up your environment"
+  icon="hammer"
+  href="/development"
 >
-  Browse our showcase of exceptional documentation sites.
+  Configure your development setup for building with Flowent.
 </Card>
