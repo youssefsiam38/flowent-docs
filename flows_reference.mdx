@@ -1,0 +1,1454 @@
+---
+title: "Flows YAML File Syntax"
+sidebarTitle: "Flows YAML File Syntax"
+icon: "diagram-project"
+description: "Complete reference guide for Flowent flows.yml files. Learn flow structure, step types, data collection, actions, conditional logic, templates, and best practices."
+keywords: ['flows', 'flows.yml', 'reference', 'flow structure', 'steps', 'data collection', 'actions', 'branching', 'templates', 'validation']
+---
+
+# Flowent Flows.yml Complete Reference Guide
+
+This comprehensive guide explains **every** aspect of writing flows.yml files for the Flowent conversational flow system. This document is designed to help both humans and AI models create perfect flow files without any syntax errors or validation issues.
+
+## 🎯 What is a Flow?
+
+A **flow** in Flowent is a structured conversation that guides users through a sequence of interactions to accomplish a specific task. Think of it as a conversation script with branching logic, data collection, and actions.
+
+---
+
+## 📁 File Structure Overview
+
+### Top-Level Structure
+
+Every flows.yml file must follow this exact structure:
+
+```yaml
+flows:
+  flow_id_1:
+    name: "Human Readable Flow Name"
+    description: "Clear description of what this flow does"
+    nlu_trigger:          # Optional - defines how to trigger this flow
+      intents:
+        - intent: "intent_name"
+    steps:                # Required - at least one step
+      - id: "step_id"
+        # Step configuration goes here
+
+  flow_id_2:
+    # Another flow definition...
+```
+
+### 🚨 Critical Rules:
+- **Root level must be `flows:`**
+- **Flow IDs** (like `flow_id_1`) must be unique and follow naming conventions
+- **Each flow must have `name`, `description`, and `steps`**
+- **Steps array cannot be empty**
+
+---
+
+## 🔧 Flow Definition Rules
+
+### Required Flow Fields
+
+| Field | Type | Required | Description | Example |
+|-------|------|----------|-------------|---------|
+| `name` | string | ✅ **YES** | Human-readable flow name for UI/logs | `"Iqama Renewal Process"` |
+| `description` | string | ✅ **YES** | Clear explanation of flow purpose | `"A comprehensive flow for renewing Iqama with different paths"` |
+| `steps` | array | ✅ **YES** | List of conversation steps (min 1) | See step examples below |
+
+### Optional Flow Fields
+
+| Field | Type | Required | Description | Example |
+|-------|------|----------|-------------|---------|
+| `id` | string | ❌ No | Flow identifier (if different from key) | `"alt_flow_id"` |
+| `nlu_trigger` | object | ❌ No | Natural language triggers | See NLU section |
+
+### Flow ID Naming Rules
+
+✅ **Valid Flow IDs:**
+```yaml
+flows:
+  iqama_renewal_flow:        # Good: descriptive with underscores
+  user_registration:         # Good: clear purpose
+  document_verification_v2:  # Good: includes version
+```
+
+❌ **Invalid Flow IDs:**
+```yaml
+flows:
+  iqama-renewal-flow:        # Bad: hyphens not allowed
+  2_user_registration:       # Bad: starts with number
+  user registration:         # Bad: contains spaces
+```
+
+---
+
+## 🎭 Step Types and Purposes
+
+### The One-Purpose Rule
+
+**🚨 CRITICAL:** Every step must have **exactly one** purpose. You cannot mix purposes in a single step.
+
+#### Three Valid Purposes:
+
+1. **📥 Data Collection (`collect`)** - Gather information from user
+2. **⚡ Action Execution (`action`)** - Execute backend operations
+3. **💬 Response (`response`)** - Send messages to user
+
+#### Valid Step Examples:
+```yaml
+# ✅ COLLECT PURPOSE ONLY
+- id: "get_user_name"
+  collect: "user_name"
+  collect_type: "string"
+  description: "What is your name?"
+  next: "greet_user"
+
+# ✅ ACTION PURPOSE ONLY
+- id: "verify_iqama"
+  action: "get_iqama"
+  next: "show_results"
+
+# ✅ RESPONSE PURPOSE ONLY
+- id: "greet_user"
+  response: "Hello slots.user_name! Welcome to our service."
+  next: "ask_service_type"
+```
+
+#### Invalid Step Examples:
+```yaml
+# ❌ MULTIPLE PURPOSES - WILL FAIL VALIDATION
+- id: "bad_step"
+  collect: "user_name"      # Purpose 1: collect
+  action: "get_iqama"       # Purpose 2: action - ERROR!
+  response: "Hello there"   # Purpose 3: response - ERROR!
+  next: "next_step"
+
+# ❌ NO PURPOSE - WILL FAIL VALIDATION
+- id: "empty_step"
+  description: "This step does nothing"
+  next: "next_step"
+```
+
+---
+
+## 📥 Data Collection Steps
+
+Data collection steps gather information from users and store it in slots for later use.
+
+### Basic Structure
+
+```yaml
+- id: "step_id"
+  collect: "field_name"           # Required: what to collect
+  collect_type: "string"          # Optional: data type
+  collect_confirmation: true      # Optional: ask for confirmation
+  send_confirmation: false        # Optional: send confirmation after saving
+  description: "User prompt"     # Optional: context for LLM
+  set_slot_as: "alternate_name"   # Optional: save with different name
+  next: "next_step_id"           # Required: where to go next
+```
+
+### Collect Field Rules
+
+#### ✅ Valid Field Names:
+```yaml
+collect: "user_name"        # Good: alphanumeric + underscore
+collect: "age"              # Good: simple name
+collect: "_private_field"   # Good: can start with underscore
+collect: "field_123"        # Good: can end with numbers
+```
+
+#### ❌ Invalid Field Names:
+```yaml
+collect: "user-name"        # Bad: hyphens not allowed
+collect: "123field"         # Bad: cannot start with number
+collect: "user name"        # Bad: spaces not allowed
+collect: "user@name"        # Bad: special characters not allowed
+```
+
+### Data Types (`collect_type`)
+
+| Type | Description | Use Cases | Example Values |
+|------|-------------|-----------|----------------|
+| `"string"` | Text input (default) | Names, IDs, addresses | `"John Doe"`, `"123456789"` |
+| `"number"` | Numeric values | Age, amounts, quantities | `25`, `1500.50` |
+| `"boolean"` | True/false values | Consent, yes/no questions | `true`, `false` |
+| `"file"` | File uploads | Documents, images | File objects |
+
+```yaml
+# String collection (default)
+- id: "get_name"
+  collect: "user_name"
+  collect_type: "string"      # Optional - string is default
+  description: "What is your full name?"
+  next: "get_age"
+
+# Number collection
+- id: "get_age"
+  collect: "user_age"
+  collect_type: "number"
+  description: "How old are you?"
+  next: "check_eligibility"
+
+# Boolean collection
+- id: "get_consent"
+  collect: "user_consent"
+  collect_type: "boolean"
+  description: "Do you agree to the terms and conditions?"
+  next: "process_registration"
+
+# File collection
+- id: "upload_document"
+  collect: "identity_document"
+  collect_type: "file"
+  description: "Please upload your identity document"
+  next: "verify_document"
+```
+
+### Confirmation Options
+
+#### Collect Confirmation
+Ask user to confirm their input before saving:
+
+```yaml
+- id: "get_important_data"
+  collect: "iqama_number"
+  collect_confirmation: true    # Ask "Is this correct: 123456789?"
+  description: "Please provide your Iqama number"
+  next: "process_iqama"
+```
+
+#### Send Confirmation
+Send confirmation message after successfully saving:
+
+```yaml
+- id: "save_email"
+  collect: "email_address"
+  send_confirmation: true       # Send "Email saved successfully"
+  description: "What is your email address?"
+  next: "next_step"
+```
+
+### Alternative Slot Names
+
+Save collected data with a different name:
+
+```yaml
+- id: "get_phone"
+  collect: "phone_number"
+  set_slot_as: "contact_phone"  # Saved as slots.contact_phone
+  description: "What is your phone number?"
+  next: "confirm_contact"
+```
+
+---
+
+## ⚡ Action Execution Steps
+
+Action steps execute backend operations like API calls, database queries, or business logic.
+
+### Basic Structure
+
+```yaml
+- id: "step_id"
+  action: "action_name"     # Required: action to execute
+  next: "next_step_id"      # Required: where to go next
+  else: "error_step_id"     # Optional: fallback on action failure
+```
+
+### Available Actions
+
+Actions must be registered in the system. Common actions include:
+
+```yaml
+# Get Iqama information
+- id: "fetch_iqama"
+  action: "get_iqama"           # Requires: iqama_number slot
+  next: "show_iqama_info"
+  else: "iqama_not_found"
+
+# Get passport information
+- id: "fetch_passport"
+  action: "get_passport"        # Requires: iqama_number slot
+  next: "show_passport_info"
+  else: "passport_error"
+
+# Authenticate user
+- id: "login_user"
+  action: "authenticate_user"   # Requires: iqama_number, password slots
+  next: "dashboard"
+  else: "login_failed"
+
+# Check traffic violations
+- id: "check_violations"
+  action: "get_traffic_violations"  # Requires: plate_number slot
+  next: "show_violations"
+  else: "no_violations_found"
+```
+
+### Action Parameter Dependencies
+
+Actions may require specific slots to be collected before execution:
+
+✅ **Correct Order:**
+```yaml
+# First collect required parameter
+- id: "get_iqama_number"
+  collect: "iqama_number"
+  next: "fetch_iqama_data"
+
+# Then execute action that needs it
+- id: "fetch_iqama_data"
+  action: "get_iqama"          # Uses slots.iqama_number
+  next: "show_results"
+```
+
+❌ **Incorrect Order:**
+```yaml
+# This will fail - action needs iqama_number but it's not collected yet
+- id: "fetch_iqama_data"
+  action: "get_iqama"          # ERROR: iqama_number not available
+  next: "show_results"
+```
+
+### Error Handling with `else`
+
+```yaml
+- id: "verify_user"
+  action: "authenticate_user"
+  next: "welcome_screen"        # Success path
+  else: "authentication_failed" # Error path
+
+- id: "authentication_failed"
+  response: "Invalid credentials. Please try again."
+  next: "get_credentials"       # Back to login
+```
+
+---
+
+## 💬 Response Steps
+
+Response steps send messages directly to users without collecting data or executing actions.
+
+### Basic Structure
+
+```yaml
+- id: "step_id"
+  response: "Message text with optional slots.variable_name"
+  next: "next_step_id"      # Where to go after sending message
+```
+
+### Static Responses
+
+```yaml
+- id: "welcome_message"
+  response: "Welcome to our Iqama services! How can I help you today?"
+  next: "service_selection"
+
+- id: "goodbye_message"
+  response: "Thank you for using our services. Have a great day!"
+  next: END
+```
+
+### Dynamic Responses with Slots
+
+```yaml
+- id: "personalized_greeting"
+  response: "Hello slots.user_name! Your Iqama number slots.iqama_number has been verified."
+  next: "service_menu"
+
+- id: "age_verification"
+  response: "Thank you. At slots.user_age years old, you are eligible for our adult services."
+  next: "adult_services_menu"
+```
+
+---
+
+## 🔀 Conditional Logic and Branching
+
+Flowent supports two types of conditional logic for branching flows based on collected data.
+
+### Simple Next Step
+
+Point to a single next step or end the flow:
+
+```yaml
+next: "step_id"      # Go to specific step
+next: END            # End the flow
+```
+
+### Conditional Next Steps
+
+Use conditions to branch to different steps:
+
+```yaml
+next:
+  - if: "programmatic_condition"
+    then: "step_id"
+  - semantic_if: "natural_language_condition"
+    then: "another_step_id"
+else: "default_step_id"    # Fallback if no conditions match
+```
+
+### Programmatic Conditions (`if`)
+
+Use code-like expressions for precise logic:
+
+```yaml
+- id: "check_age"
+  collect: "user_age"
+  collect_type: "number"
+  next:
+    - if: "slots.user_age >= 18"
+      then: "adult_services"
+    - if: "slots.user_age < 18"
+      then: "minor_services"
+  else: "age_error"
+
+- id: "check_status"
+  collect: "employment_status"
+  next:
+    - if: "slots.employment_status == 'employed'"
+      then: "work_visa_renewal"
+    - if: "slots.employment_status == 'student'"
+      then: "student_visa_renewal"
+  else: "other_visa_types"
+```
+
+### Semantic Conditions (`semantic_if`)
+
+Use natural language for LLM-based evaluation:
+
+```yaml
+- id: "analyze_feedback"
+  collect: "user_feedback"
+  next:
+    - semantic_if: "user is satisfied or happy with the service"
+      then: "positive_response"
+    - semantic_if: "user is dissatisfied or complaining"
+      then: "negative_response"
+    - semantic_if: "user needs help or has questions"
+      then: "help_section"
+  else: "neutral_response"
+
+- id: "categorize_request"
+  collect: "user_request"
+  next:
+    - semantic_if: "user wants information about documents"
+      then: "document_info_flow"
+    - semantic_if: "user wants to renew something"
+      then: "renewal_flow"
+  else: "general_assistance"
+```
+
+### Complex Branching Example
+
+```yaml
+- id: "eligibility_check"
+  collect: "user_age"
+  collect_type: "number"
+  next:
+    - if: "slots.user_age < 18"
+      then: "minor_path"
+    - if: "slots.user_age >= 18 && slots.user_age < 65"
+      then: "adult_path"
+    - if: "slots.user_age >= 65"
+      then: "senior_path"
+  else: "age_verification_error"
+```
+
+### Using `else` for Fallbacks
+
+The `else` field provides a safety net when no conditions match:
+
+```yaml
+- id: "route_by_service"
+  collect: "service_type"
+  next:
+    - if: "slots.service_type == 'iqama'"
+      then: "iqama_services"
+    - if: "slots.service_type == 'passport'"
+      then: "passport_services"
+  else: "unknown_service_error"    # Important safety net
+
+- id: "unknown_service_error"
+  response: "Sorry, I don't understand the service 'slots.service_type'. Please choose from: iqama, passport"
+  next: "service_selection"
+```
+
+---
+
+## 🏷️ Template System and Slot References
+
+Flowent uses a powerful template system to reference previously collected data in responses and descriptions.
+
+### Slot Reference Syntax
+
+Use `slots.field_name` to reference collected data:
+
+```yaml
+slots.user_name           # Reference user_name field
+slots.iqama_number        # Reference iqama_number field
+slots.contact_phone       # Reference contact_phone field
+```
+
+### Valid Slot Names
+
+✅ **Valid Slot References:**
+```yaml
+slots.user_name           # alphanumeric + underscore
+slots.field_123           # ending with numbers
+slots._private_field      # starting with underscore
+slots.user_contact_info   # multiple underscores
+```
+
+❌ **Invalid Slot References:**
+```yaml
+slots.user-name           # hyphens not allowed
+slots.123field            # cannot start with number
+slots.user name           # spaces not allowed
+slots.user@email          # special characters not allowed
+slots.                   # incomplete reference
+```
+
+### Using Slots in Responses
+
+```yaml
+- id: "personalized_welcome"
+  response: "Welcome back, slots.user_name! Your last login was successful."
+  next: "main_menu"
+
+- id: "confirm_details"
+  response: "Please confirm: Name: slots.user_name, Age: slots.user_age, Phone: slots.phone_number"
+  next: "process_application"
+
+- id: "service_complete"
+  response: "Your slots.service_type request has been processed. Reference number: slots.request_id"
+  next: END
+```
+
+### Using Slots in Descriptions
+
+Provide context to the LLM about what data to collect:
+
+```yaml
+- id: "get_child_age"
+  collect: "child_age"
+  collect_type: "number"
+  description: "Please provide the age of slots.child_name for registration"
+  next: "validate_child_age"
+
+- id: "get_dependent_info"
+  collect: "dependent_relationship"
+  description: "What is your relationship to slots.applicant_name?"
+  next: "verify_relationship"
+```
+
+### Slot Availability Rules
+
+🚨 **Critical Rule:** You can only reference slots that were collected in **previous** steps.
+
+✅ **Correct Slot Usage:**
+```yaml
+# Step 1: Collect data
+- id: "get_name"
+  collect: "user_name"
+  next: "greet_user"
+
+# Step 2: Use previously collected data
+- id: "greet_user"
+  response: "Hello slots.user_name!"    # ✅ user_name was collected in step 1
+  next: "get_age"
+
+# Step 3: Collect more data
+- id: "get_age"
+  collect: "user_age"
+  next: "age_confirmation"
+
+# Step 4: Use all previously collected data
+- id: "age_confirmation"
+  response: "So slots.user_name, you are slots.user_age years old?"  # ✅ Both available
+  next: "confirm_details"
+```
+
+❌ **Incorrect Slot Usage:**
+```yaml
+# Step 1: Cannot reference slots not yet collected
+- id: "bad_greeting"
+  response: "Hello slots.user_name!"    # ❌ user_name not collected yet
+  next: "get_name"
+
+# Step 2: Cannot reference own field in same step
+- id: "get_name"
+  collect: "user_name"
+  description: "Please enter slots.user_name"  # ❌ user_name being collected now
+  next: "next_step"
+```
+
+---
+
+## 🧭 Flow Connectivity and Navigation
+
+Proper navigation ensures users can move through your flow without getting stuck.
+
+### Step Reference Rules
+
+Every step must be reachable and every reference must be valid:
+
+✅ **Valid References:**
+```yaml
+next: "existing_step_id"      # Points to a step that exists
+next: END                     # Special keyword to end flow
+else: "error_handling_step"   # Points to existing error step
+```
+
+❌ **Invalid References:**
+```yaml
+next: "nonexistent_step"      # Step doesn't exist - VALIDATION ERROR
+next: "typo_in_step_name"     # Typo in step ID - VALIDATION ERROR
+else: "missing_error_step"    # Error step doesn't exist - VALIDATION ERROR
+```
+
+### Ending Flows
+
+Use `END` to terminate a flow:
+
+```yaml
+- id: "final_message"
+  response: "Thank you for using our service!"
+  next: END                   # Flow terminates here
+
+- id: "conditional_ending"
+  collect: "continue_service"
+  collect_type: "boolean"
+  next:
+    - if: "slots.continue_service == true"
+      then: "additional_services"
+    - if: "slots.continue_service == false"
+      then: END               # End if user doesn't want to continue
+```
+
+### Unreachable Steps
+
+Avoid creating steps that can never be reached:
+
+❌ **Unreachable Step Example:**
+```yaml
+flows:
+  bad_flow:
+    name: "Bad Flow"
+    description: "Flow with unreachable step"
+    steps:
+      - id: "start_step"
+        collect: "user_input"
+        next: "end_step"
+
+      - id: "middle_step"      # ❌ This step is unreachable!
+        response: "You'll never see this"
+        next: "end_step"
+
+      - id: "end_step"
+        response: "Flow complete"
+        next: END
+```
+
+### Circular References
+
+Avoid infinite loops by being careful with step references:
+
+⚠️ **Potential Loop (use with caution):**
+```yaml
+- id: "retry_step"
+  collect: "user_input"
+  next:
+    - if: "slots.user_input == 'retry'"
+      then: "retry_step"      # ⚠️ Points back to itself
+    - if: "slots.user_input == 'continue'"
+      then: "next_step"
+  else: "error_step"
+```
+
+✅ **Better Approach:**
+```yaml
+- id: "input_step"
+  collect: "user_input"
+  next: "validate_input"
+
+- id: "validate_input"
+  next:
+    - if: "slots.user_input == 'valid'"
+      then: "process_input"
+    - if: "slots.user_input == 'invalid'"
+      then: "retry_message"
+
+- id: "retry_message"
+  response: "Invalid input. Please try again."
+  next: "input_step"          # ✅ Clear retry pattern
+
+- id: "process_input"
+  response: "Input processed successfully!"
+  next: END
+```
+
+---
+
+## 🎯 NLU Triggers
+
+NLU (Natural Language Understanding) triggers define how flows can be automatically started based on user intents.
+
+### Basic Structure
+
+```yaml
+flows:
+  flow_name:
+    name: "Flow Name"
+    description: "Flow description"
+    nlu_trigger:              # Optional
+      intents:
+        - intent: "intent_name_1"
+        - intent: "intent_name_2"
+    steps:
+      # Flow steps...
+```
+
+### Intent Configuration
+
+```yaml
+nlu_trigger:
+  intents:
+    - intent: "iqama_information"
+    - intent: "iqama_query"
+    - intent: "residence_permit_info"
+    - intent: "check_iqama_status"
+```
+
+### Multiple Trigger Examples
+
+```yaml
+# Iqama-related flow
+iqama_services_flow:
+  name: "Iqama Services"
+  description: "Handle all Iqama-related requests"
+  nlu_trigger:
+    intents:
+      - intent: "iqama_renewal"
+      - intent: "iqama_information"
+      - intent: "residence_permit"
+  steps:
+    # Steps for Iqama services...
+
+# Traffic violations flow
+traffic_flow:
+  name: "Traffic Violations"
+  description: "Check traffic violations"
+  nlu_trigger:
+    intents:
+      - intent: "traffic_violations"
+      - intent: "check_fines"
+      - intent: "plate_violations"
+  steps:
+    # Steps for traffic services...
+```
+
+### Flows Without Triggers
+
+Flows without NLU triggers can only be started programmatically:
+
+```yaml
+internal_verification_flow:
+  name: "Internal Verification"
+  description: "Internal flow for document verification"
+  # No nlu_trigger - can only be called by other flows or system
+  steps:
+    - id: "verify_document"
+      action: "verify_document"
+      next: END
+```
+
+---
+
+## ✅ Validation Rules and Common Errors
+
+Understanding validation rules helps you avoid common mistakes.
+
+### Flow-Level Validation
+
+#### Required Fields Missing
+```yaml
+# ❌ Missing required fields
+flows:
+  bad_flow:
+    # Missing name - ERROR
+    # Missing description - ERROR
+    steps: []  # Empty steps - ERROR
+```
+
+✅ **Fix:**
+```yaml
+flows:
+  good_flow:
+    name: "Good Flow"                    # ✅ Required
+    description: "A properly defined flow"  # ✅ Required
+    steps:                               # ✅ Required with at least one step
+      - id: "start"
+        response: "Hello!"
+        next: END
+```
+
+#### Mismatched Flow ID
+```yaml
+# ⚠️ Warning: ID doesn't match key
+flows:
+  flow_key_name:
+    id: "different_id"      # ⚠️ Warning - should match key or be omitted
+    name: "Flow Name"
+    description: "Description"
+```
+
+### Step-Level Validation
+
+#### Missing Step ID
+```yaml
+# ❌ Missing step ID
+steps:
+  - collect: "user_name"    # ERROR: No id field
+    next: "next_step"
+```
+
+✅ **Fix:**
+```yaml
+steps:
+  - id: "get_user_name"     # ✅ Required ID
+    collect: "user_name"
+    next: "next_step"
+```
+
+#### Duplicate Step IDs
+```yaml
+# ❌ Duplicate step IDs
+steps:
+  - id: "duplicate_step"    # ERROR: Duplicate ID
+    collect: "field1"
+    next: END
+  - id: "duplicate_step"    # ERROR: Same ID used again
+    collect: "field2"
+    next: END
+```
+
+#### No Step Purpose
+```yaml
+# ❌ Step with no purpose
+steps:
+  - id: "empty_step"
+    description: "This step does nothing"  # ERROR: No collect/action/response
+    next: "next_step"
+```
+
+#### Multiple Step Purposes
+```yaml
+# ❌ Multiple purposes in one step
+steps:
+  - id: "confused_step"
+    collect: "user_name"      # Purpose 1
+    action: "get_data"        # Purpose 2 - ERROR!
+    response: "Hello"         # Purpose 3 - ERROR!
+    next: "next_step"
+```
+
+### Data Collection Validation
+
+#### Invalid Field Names
+```yaml
+# ❌ Invalid field names
+steps:
+  - id: "step1"
+    collect: "user-name"      # ERROR: Hyphen not allowed
+    next: END
+  - id: "step2"
+    collect: "123field"       # ERROR: Starts with number
+    next: END
+  - id: "step3"
+    collect: "user name"      # ERROR: Space not allowed
+    next: END
+```
+
+#### Invalid Collect Types
+```yaml
+# ❌ Invalid collect_type
+steps:
+  - id: "bad_type"
+    collect: "user_data"
+    collect_type: "invalid"   # ERROR: Must be string/file/number/boolean
+    next: END
+```
+
+### Template and Slot Validation
+
+#### Invalid Slot References
+```yaml
+# ❌ Invalid slot syntax
+steps:
+  - id: "bad_slots"
+    response: "Hello slots.user-name and slots.123field"  # ERROR: Invalid names
+    next: END
+```
+
+#### Incomplete Slot References
+```yaml
+# ❌ Incomplete slot reference
+steps:
+  - id: "incomplete"
+    response: "Hello slots."  # ERROR: Incomplete reference
+    next: END
+```
+
+#### Unavailable Slot Dependencies
+```yaml
+# ❌ Using slots before they're collected
+steps:
+  - id: "premature_slot"
+    response: "Hello slots.user_name"  # ERROR: user_name not collected yet
+    next: "collect_name"
+  - id: "collect_name"
+    collect: "user_name"
+    next: END
+```
+
+### Navigation Validation
+
+#### Invalid Step References
+```yaml
+# ❌ Referencing non-existent steps
+steps:
+  - id: "start"
+    collect: "input"
+    next: "nonexistent_step"  # ERROR: Step doesn't exist
+```
+
+#### Invalid Conditional References
+```yaml
+# ❌ Invalid conditional references
+steps:
+  - id: "conditional_step"
+    collect: "choice"
+    next:
+      - if: "slots.choice == 'yes'"
+        then: "missing_step"   # ERROR: Step doesn't exist
+    else: "also_missing"       # ERROR: Step doesn't exist
+```
+
+### Action Validation
+
+#### Non-existent Actions
+```yaml
+# ❌ Action not registered in system
+steps:
+  - id: "bad_action"
+    action: "nonexistent_action"  # ERROR: Action not found in registry
+    next: END
+```
+
+#### Missing Action Parameters
+```yaml
+# ❌ Action requires parameters not yet collected
+steps:
+  - id: "premature_action"
+    action: "get_iqama"        # ERROR: Requires iqama_number but not collected
+    next: "show_results"
+```
+
+---
+
+## 🎯 Complete Examples
+
+### Simple Linear Flow
+```yaml
+flows:
+  simple_greeting_flow:
+    name: "Simple Greeting"
+    description: "A basic greeting flow that collects name and responds"
+    nlu_trigger:
+      intents:
+        - intent: "greeting"
+        - intent: "hello"
+    steps:
+      - id: "collect_name"
+        collect: "user_name"
+        collect_type: "string"
+        description: "What is your name?"
+        next: "greet_user"
+
+      - id: "greet_user"
+        response: "Hello slots.user_name! Nice to meet you."
+        next: "ask_help"
+
+      - id: "ask_help"
+        collect: "needs_help"
+        collect_type: "boolean"
+        description: "Do you need help with anything today?"
+        next:
+          - if: "slots.needs_help == true"
+            then: "offer_help"
+          - if: "slots.needs_help == false"
+            then: "goodbye"
+
+      - id: "offer_help"
+        response: "Great! I'm here to help you, slots.user_name. What can I assist you with?"
+        next: END
+
+      - id: "goodbye"
+        response: "Okay slots.user_name, have a wonderful day!"
+        next: END
+```
+
+### Complex Branching Flow
+```yaml
+flows:
+  iqama_renewal_flow:
+    name: "Iqama Renewal Process"
+    description: "Complete Iqama renewal with multiple paths based on status"
+    nlu_trigger:
+      intents:
+        - intent: "renew_iqama"
+        - intent: "iqama_renewal"
+    steps:
+      - id: "collect_iqama_number"
+        collect: "iqama_number"
+        collect_type: "string"
+        collect_confirmation: true
+        description: "Please provide your Iqama number for renewal"
+        next: "collect_password"
+
+      - id: "collect_password"
+        collect: "password"
+        collect_type: "string"
+        description: "Enter your account password"
+        next: "authenticate_user"
+
+      - id: "authenticate_user"
+        action: "authenticate_user"
+        next: "check_eligibility"
+        else: "authentication_failed"
+
+      - id: "authentication_failed"
+        response: "Authentication failed for Iqama slots.iqama_number. Please verify your credentials."
+        next: END
+
+      - id: "check_eligibility"
+        collect: "renewal_type"
+        collect_type: "string"
+        description: "What type of Iqama renewal? (work, family, student)"
+        next: "route_by_type"
+
+      - id: "route_by_type"
+        next:
+          - if: "slots.renewal_type == 'work'"
+            then: "work_renewal_path"
+          - if: "slots.renewal_type == 'family'"
+            then: "family_renewal_path"
+          - if: "slots.renewal_type == 'student'"
+            then: "student_renewal_path"
+        else: "unsupported_type"
+
+      - id: "work_renewal_path"
+        response: "Processing work-based Iqama renewal for slots.iqama_number..."
+        next: "collect_employment_info"
+
+      - id: "collect_employment_info"
+        collect: "employment_contract"
+        collect_type: "file"
+        description: "Please upload your current employment contract"
+        next: "verify_employment"
+
+      - id: "verify_employment"
+        action: "verify_work_contract"
+        next: "work_renewal_complete"
+        else: "employment_verification_failed"
+
+      - id: "work_renewal_complete"
+        response: "Work Iqama renewal completed successfully! Your new Iqama will be ready in 7-10 business days."
+        next: END
+
+      - id: "family_renewal_path"
+        response: "Processing family-based Iqama renewal for slots.iqama_number..."
+        next: "verify_family_status"
+
+      - id: "verify_family_status"
+        action: "verify_family_status"
+        next: "family_renewal_complete"
+        else: "family_verification_failed"
+
+      - id: "family_renewal_complete"
+        response: "Family Iqama renewal completed successfully! Your new Iqama will be ready in 10-14 business days."
+        next: END
+
+      - id: "student_renewal_path"
+        response: "Processing student-based Iqama renewal for slots.iqama_number..."
+        next: "collect_enrollment_proof"
+
+      - id: "collect_enrollment_proof"
+        collect: "enrollment_certificate"
+        collect_type: "file"
+        description: "Please upload your current enrollment certificate"
+        next: "verify_enrollment"
+
+      - id: "verify_enrollment"
+        action: "verify_student_status"
+        next: "student_renewal_complete"
+        else: "enrollment_verification_failed"
+
+      - id: "student_renewal_complete"
+        response: "Student Iqama renewal completed successfully! Your new Iqama will be ready in 5-7 business days."
+        next: END
+
+      - id: "unsupported_type"
+        response: "Sorry, renewal type 'slots.renewal_type' is not supported. Please contact support."
+        next: END
+
+      - id: "employment_verification_failed"
+        response: "Employment verification failed. Please contact your employer to ensure your contract is valid."
+        next: END
+
+      - id: "family_verification_failed"
+        response: "Family status verification failed. Please visit the nearest office with required documents."
+        next: END
+
+      - id: "enrollment_verification_failed"
+        response: "Enrollment verification failed. Please contact your institution's international office."
+        next: END
+```
+
+### Multi-Service Flow with Semantic Conditions
+```yaml
+flows:
+  intelligent_service_flow:
+    name: "Intelligent Service Router"
+    description: "AI-powered service routing based on user intent"
+    nlu_trigger:
+      intents:
+        - intent: "general_inquiry"
+        - intent: "need_help"
+    steps:
+      - id: "collect_user_request"
+        collect: "user_request"
+        collect_type: "string"
+        description: "How can I help you today? Please describe what you need."
+        next: "analyze_request"
+
+      - id: "analyze_request"
+        next:
+          - semantic_if: "user wants to renew or extend documents"
+            then: "renewal_services"
+          - semantic_if: "user wants information about documents or status"
+            then: "information_services"
+          - semantic_if: "user wants to check violations or fines"
+            then: "violation_services"
+          - semantic_if: "user needs help with applications or forms"
+            then: "application_services"
+        else: "clarify_request"
+
+      - id: "renewal_services"
+        response: "I understand you need renewal services. Let me help you with that."
+        next: "collect_renewal_type"
+
+      - id: "collect_renewal_type"
+        collect: "document_type"
+        collect_type: "string"
+        description: "What document do you want to renew? (iqama, passport, license)"
+        next: "process_renewal"
+
+      - id: "information_services"
+        response: "I'll help you get the information you need."
+        next: "collect_info_type"
+
+      - id: "collect_info_type"
+        collect: "info_requested"
+        collect_type: "string"
+        description: "What information do you need? (personal details, status, requirements)"
+        next: "provide_information"
+
+      - id: "violation_services"
+        response: "I'll help you check for violations or fines."
+        next: "collect_plate_or_iqama"
+
+      - id: "application_services"
+        response: "I'll assist you with applications and forms."
+        next: "collect_application_type"
+
+      - id: "clarify_request"
+        collect: "clarification"
+        collect_type: "string"
+        description: "I want to help but need more details. Could you please be more specific about what service you need?"
+        next: "analyze_clarification"
+
+      - id: "analyze_clarification"
+        next:
+          - semantic_if: "user provided clearer information about their needs"
+            then: "analyze_request"
+          - semantic_if: "user still unclear or confused"
+            then: "offer_menu"
+        else: "general_assistance"
+
+      - id: "offer_menu"
+        response: "Let me show you our available services. Please choose from: 1) Document Renewal 2) Information Lookup 3) Violation Check 4) Applications"
+        next: "collect_menu_choice"
+
+      - id: "collect_menu_choice"
+        collect: "menu_choice"
+        collect_type: "string"
+        description: "Which service would you like? (1, 2, 3, or 4)"
+        next: "route_menu_choice"
+
+      - id: "route_menu_choice"
+        next:
+          - if: "slots.menu_choice == '1'"
+            then: "renewal_services"
+          - if: "slots.menu_choice == '2'"
+            then: "information_services"
+          - if: "slots.menu_choice == '3'"
+            then: "violation_services"
+          - if: "slots.menu_choice == '4'"
+            then: "application_services"
+        else: "invalid_choice"
+
+      # Placeholder completion steps
+      - id: "process_renewal"
+        response: "Processing your slots.document_type renewal request..."
+        next: END
+
+      - id: "provide_information"
+        response: "Here's the slots.info_requested information you requested..."
+        next: END
+
+      - id: "collect_plate_or_iqama"
+        collect: "identifier"
+        description: "Please provide your plate number or Iqama number"
+        next: "check_violations"
+
+      - id: "check_violations"
+        response: "Checking violations for slots.identifier..."
+        next: END
+
+      - id: "collect_application_type"
+        collect: "application_type"
+        description: "What type of application do you need help with?"
+        next: "assist_application"
+
+      - id: "assist_application"
+        response: "I'll help you with your slots.application_type application..."
+        next: END
+
+      - id: "general_assistance"
+        response: "I'm here to help! You can ask me about document renewals, checking information, violations, or applications."
+        next: END
+
+      - id: "invalid_choice"
+        response: "Please choose a valid option (1, 2, 3, or 4) or describe what you need in your own words."
+        next: "collect_menu_choice"
+```
+
+---
+
+## 🏆 Best Practices
+
+### 1. **Clear and Descriptive Naming**
+
+✅ **Good:**
+```yaml
+flows:
+  iqama_renewal_comprehensive_flow:
+    name: "Comprehensive Iqama Renewal Process"
+    steps:
+      - id: "collect_iqama_number_with_validation"
+      - id: "authenticate_user_credentials"
+      - id: "verify_eligibility_requirements"
+```
+
+❌ **Bad:**
+```yaml
+flows:
+  flow1:
+    name: "Flow"
+    steps:
+      - id: "step1"
+      - id: "step2"
+      - id: "step3"
+```
+
+### 2. **Comprehensive Error Handling**
+
+Always provide error paths and fallbacks:
+
+```yaml
+- id: "authenticate_user"
+  action: "authenticate_user"
+  next: "dashboard"
+  else: "authentication_failed"    # ✅ Handle failure
+
+- id: "authentication_failed"
+  response: "Login failed. Please check your credentials and try again."
+  next: "collect_credentials"      # ✅ Allow retry
+
+- id: "validate_input"
+  next:
+    - if: "slots.input == 'valid'"
+      then: "process_input"
+  else: "input_validation_error"   # ✅ Handle invalid input
+```
+
+### 3. **Logical Step Progression**
+
+Structure steps in logical order:
+
+```yaml
+steps:
+  # 1. Authentication first
+  - id: "collect_credentials"
+  - id: "authenticate_user"
+
+  # 2. Then data collection
+  - id: "collect_required_info"
+  - id: "validate_information"
+
+  # 3. Then processing
+  - id: "process_request"
+  - id: "generate_results"
+
+  # 4. Finally confirmation
+  - id: "confirm_completion"
+  - id: "provide_reference_number"
+```
+
+### 4. **Meaningful Descriptions**
+
+Provide context for LLM and debugging:
+
+```yaml
+- id: "collect_dependent_age"
+  collect: "dependent_age"
+  collect_type: "number"
+  description: "Please provide the age of slots.dependent_name for family visa application verification"
+  next: "validate_dependent_eligibility"
+```
+
+### 5. **Consistent Data Types**
+
+Be explicit about data types:
+
+```yaml
+- id: "collect_age"
+  collect: "user_age"
+  collect_type: "number"        # ✅ Explicit type
+
+- id: "collect_consent"
+  collect: "user_consent"
+  collect_type: "boolean"       # ✅ Clear boolean
+
+- id: "collect_document"
+  collect: "identity_doc"
+  collect_type: "file"          # ✅ File upload
+```
+
+### 6. **Smart Confirmations**
+
+Use confirmations strategically:
+
+```yaml
+- id: "collect_critical_info"
+  collect: "iqama_number"
+  collect_confirmation: true    # ✅ Critical data needs confirmation
+  next: "process_application"
+
+- id: "collect_optional_info"
+  collect: "phone_number"
+  # No confirmation for optional data
+  next: "next_step"
+```
+
+### 7. **Graceful Flow Termination**
+
+Always provide clear endings:
+
+```yaml
+- id: "success_completion"
+  response: "Your request has been completed successfully! Reference: slots.reference_number"
+  next: END
+
+- id: "error_termination"
+  response: "We encountered an error. Please contact support with reference: slots.error_code"
+  next: END
+```
+
+### 8. **Test Edge Cases**
+
+Consider all possible user paths:
+
+```yaml
+- id: "age_verification"
+  collect: "user_age"
+  collect_type: "number"
+  next:
+    - if: "slots.user_age < 0"
+      then: "invalid_age_error"     # ✅ Handle negative age
+    - if: "slots.user_age > 150"
+      then: "invalid_age_error"     # ✅ Handle unrealistic age
+    - if: "slots.user_age < 18"
+      then: "minor_services"
+    - if: "slots.user_age >= 18"
+      then: "adult_services"
+  else: "age_processing_error"      # ✅ Handle unexpected cases
+```
+
+### 9. **Document Your Flows**
+
+Include comments and documentation:
+
+```yaml
+flows:
+  # Main user registration flow for new users
+  # Handles: data collection, validation, account creation
+  # Prerequisites: none
+  # Outputs: user_id, registration_status
+  user_registration_flow:
+    name: "User Registration Process"
+    description: "Complete user registration with validation and account creation"
+```
+
+### 10. **Modular Design**
+
+Keep flows focused and reusable:
+
+```yaml
+# ✅ Focused flow for one specific task
+flows:
+  document_verification_flow:
+    name: "Document Verification"
+    description: "Verify uploaded documents"
+    # Single responsibility
+
+  # ✅ Separate flow for different task
+  payment_processing_flow:
+    name: "Payment Processing"
+    description: "Handle payment transactions"
+    # Different responsibility
+```
+
+---
+
+## 🚨 Critical Reminders
+
+1. **Every step MUST have exactly one purpose** (collect, action, or response)
+2. **Step IDs must be unique** within each flow
+3. **All step references must exist** (next, else, then fields)
+4. **Slot references can only use previously collected data**
+5. **Field names must follow naming rules** (alphanumeric + underscore only)
+6. **collect_type must be valid** (string, file, number, boolean)
+7. **Actions must exist in the system registry**
+8. **Use END to terminate flows**
+9. **Always provide error handling with else fields**
+10. **Test all conditional paths**
+
+---
+
+This comprehensive guide covers every aspect of writing flows.yml files for Flowent. Following these rules and examples will ensure your flows validate successfully and provide excellent user experiences. Remember: when in doubt, keep it simple and always provide fallback paths for error handling!

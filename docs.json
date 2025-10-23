@@ -25,7 +25,8 @@
         "group": "Guides",
         "icon": "book-open",
         "pages": [
-          "api-concepts"
+          "api-concepts",
+          "flows_reference"
         ]
       },
       {

@@ -1,6 +1,6 @@
 ---
-title: "API Concepts"
-sidebarTitle: "Concepts"
+title: "API Main Concepts"
+sidebarTitle: "API Main Concepts"
 icon: "lightbulb"
 description: "Master Flowent API Gateway concepts including JWT authentication, webhook implementation, HMAC signature validation, security best practices, and error handling."
 keywords: ['api concepts', 'authentication', 'jwt', 'webhooks', 'hmac', 'security', 'signature validation', 'action management']
@@ -393,10 +393,3 @@ def debug_signature_validation(request_data, received_signature, hmac_key):
 
     return hmac.compare_digest(expected_signature, received_signature)
 ```
-
-## Support
-
-For additional support:
-- Check the admin panel logs
-- Review your webhook server logs
-- Contact the Flowent team with specific error messages
